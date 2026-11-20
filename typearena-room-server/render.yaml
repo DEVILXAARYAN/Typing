@@ -1,0 +1,16 @@
+# Optional: lets Render set everything up from this file (New > Blueprint).
+# You can also create the service by hand; the README lists the settings.
+services:
+  - type: web
+    name: typearena
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Paste the connection string of your Postgres database here (see the README: "Accounts and ratings").
+      - key: DATABASE_URL
+        sync: false

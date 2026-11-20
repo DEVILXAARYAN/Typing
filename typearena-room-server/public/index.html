@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TypeArena</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5FF;--panel:#FFFFFF;--line:#D5DBF5;--text:#12163A;--mute:#5A6396;
+  --ok:#17803D;--accent:#5B3FE0;--bad:#C62828;--pending:#7A83B0;--chip:#E8EBFF;--brand:#C6FF3D;
+  color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0B0F1E;--panel:#141A33;--line:#2A3366;--text:#E8ECFF;--mute:#9AA3C7;--ok:#C6FF3D;--accent:#7C5CFF;--bad:#FF8A8A;--pending:#6E78A8;--chip:#1D2447;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#0B0F1E;--panel:#141A33;--line:#2A3366;--text:#E8ECFF;--mute:#9AA3C7;--ok:#C6FF3D;--accent:#7C5CFF;--bad:#FF8A8A;--pending:#6E78A8;--chip:#1D2447;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
+.wrap{max-width:980px;margin:0 auto;padding:24px 20px 48px;display:flex;flex-direction:column;gap:20px}
+[hidden]{display:none!important}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:700;letter-spacing:-.5px}
+.logo i{width:36px;height:36px;border-radius:10px;background:var(--brand);color:#0B0F1E;display:flex;align-items:center;justify-content:center;font:700 18px 'JetBrains Mono',monospace;font-style:normal}
+.badge{background:var(--chip);border-radius:999px;padding:8px 16px;font-size:14px;color:var(--mute)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:16px}
+h1,h2{margin:0;letter-spacing:-1px}h1{font-size:34px}h2{font-size:24px}
+.muted{color:var(--mute);margin:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input{font:500 16px 'Space Grotesk',system-ui,sans-serif;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);min-width:0}
+input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:500 15px 'Space Grotesk',system-ui,sans-serif;min-height:44px;padding:0 22px;border-radius:12px;border:1px solid var(--line);background:var(--chip);color:var(--text);cursor:pointer}
+a.btn{display:inline-flex;align-items:center;font:500 15px 'Space Grotesk',system-ui,sans-serif;min-height:44px;padding:0 22px;border-radius:12px;border:1px solid var(--line);background:var(--chip);color:var(--text);text-decoration:none}
+a.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--brand);border-color:var(--brand);color:#0B0F1E;font-weight:700}
+button:disabled{opacity:.5;cursor:not-allowed}
+.err{color:var(--bad);margin:0;min-height:1.2em}
+.code{font:700 48px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:8px;color:var(--ok)}
+.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.pl{display:flex;align-items:center;gap:10px;background:var(--chip);border-radius:14px;padding:10px 14px;min-width:0}
+.pl.me{outline:2px solid var(--ok)}
+.av{width:34px;height:34px;border-radius:50%;flex:none}
+.pl span.n{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl.empty{background:transparent;border:2px dashed var(--line);color:var(--mute)}
+.pl.empty .n{font-weight:500}
+.stack{display:flex;flex-direction:column;gap:16px}
+.timer{display:flex;flex-direction:column;gap:4px;background:var(--chip);border-radius:16px;padding:14px 20px;width:fit-content;max-width:100%}
+.timer small{color:var(--mute);font-size:14px}
+.timer b{font:700 40px 'JetBrains Mono',ui-monospace,monospace;color:var(--ok)}
+.tag{font-size:12px;border-radius:999px;padding:2px 10px;background:var(--brand);color:#0B0F1E;font-weight:700}
+.tag.off{background:var(--line);color:var(--mute)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:14px 18px}
+.stat small{display:block;font-size:14px;color:var(--mute)}
+.stat b{display:block;font:700 32px 'JetBrains Mono',ui-monospace,monospace;margin-top:4px}
+.stat.main b{color:var(--ok)}
+.box{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:28px 30px;min-height:190px}
+.box:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+#text{font:500 clamp(20px,3.2vw,28px)/1.75 'JetBrains Mono',ui-monospace,monospace;color:var(--pending);white-space:pre-wrap;word-break:break-word}
+#text span.ok{color:var(--ok)}#text span.bad{color:var(--bad)}
+#text .w{white-space:nowrap}
+#text span.miss{text-decoration:underline;text-decoration-color:var(--bad);text-underline-offset:.2em}
+#text .caret{display:inline-block;position:relative;width:0;height:1.3em;vertical-align:text-bottom}
+#text .caret::before{content:"";position:absolute;left:-1px;top:0;width:2px;height:100%;border-radius:1px;background:var(--accent);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion: reduce){#text .caret::before{animation:none}}
+.box.wait #text{opacity:.35}
+#ta{position:absolute;inset:0;width:100%;height:100%;opacity:0;resize:none;border:0;padding:0;font-size:16px;cursor:text}
+#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 64px 'JetBrains Mono',monospace;pointer-events:none}
+.bar{height:10px;border-radius:99px;background:var(--chip);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .15s}
+.scene{display:flex;flex-direction:column;gap:6px}
+canvas#scene{width:100%;display:block;border-radius:20px;border:1px solid var(--line);background:#231F4D}
+.board{display:flex;flex-direction:column;gap:10px}
+.lane{display:grid;grid-template-columns:130px 1fr 70px;align-items:center;gap:12px;font-size:15px}
+.lane .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lane.me .nm{color:var(--ok)}
+.lane .wp{font-family:'JetBrains Mono',monospace;text-align:right}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th{font-weight:500;color:var(--mute);text-align:left;padding:8px 10px;font-size:14px}
+td{padding:12px 10px;border-top:1px solid var(--line)}
+td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace}
+tr.me td{background:var(--chip)}
+.warn{color:var(--bad);font-size:13px}
+.table-scroll{overflow-x:auto}
+@media (max-width:640px){.card{padding:20px}.lane{grid-template-columns:90px 1fr 56px}.code{font-size:36px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <div class="logo"><i>T</i>TypeArena</div>
+    <span class="badge" id="conn">Connecting…</span>
+  </header>
+
+  <section id="s-home" class="card" hidden>
+    <h1>Race your friends</h1>
+    <p class="muted">Play against players from anywhere, or race your friends in a private room.</p>
+    <div class="stack" id="acctOut">
+      <p class="muted"><b>Sign in</b> to earn a rating and appear on the leaderboard, or just play as a guest.</p>
+      <div class="row"><input id="uName" maxlength="20" placeholder="Username" aria-label="Username" autocomplete="username"><input id="uPass" type="password" maxlength="100" placeholder="Password (8+ characters)" aria-label="Password" autocomplete="current-password"></div>
+      <div class="row"><button id="login">Log in</button><button id="register">Create account</button></div>
+      <p class="err" id="acctErr" role="alert"></p>
+      <div class="row" id="guestName"><input id="name" maxlength="20" placeholder="Guest name" aria-label="Guest name" autocomplete="nickname"></div>
+    </div>
+    <div class="row" id="acctIn" hidden><b id="acctLine"></b><a class="btn" href="/profile">My profile</a><a class="btn" href="/locker">Locker</a><button id="logout">Sign out</button></div>
+    <div class="row"><button class="primary" id="quick">Quick match</button><span class="muted">Jump into a public lobby. If there aren’t enough players, bots (marked BOT) fill the empty seats.</span></div>
+    <div class="row"><a class="btn" href="/solo">Solo Sprint</a><span class="muted"><b>Test your speed</b> alone: get your WPM, accuracy, consistency and the words to work on.</span></div>
+    <div class="row"><button id="create">Create private room</button><span class="muted">Get an invite link for your friends.</span></div>
+    <div class="row"><input id="code" maxlength="6" placeholder="Room code" aria-label="Room code" style="text-transform:uppercase;width:160px"><button id="join">Join room</button></div>
+    <p class="err" id="homeErr" role="alert"></p>
+  </section>
+
+  <section id="s-board" class="card" hidden>
+    <h2>Leaderboard</h2>
+    <div class="table-scroll"><table>
+      <thead><tr><th>#</th><th>Player</th><th class="num">Rating</th><th class="num">Wins</th><th class="num">Games</th><th class="num">Best WPM</th></tr></thead>
+      <tbody id="boardBody"></tbody>
+    </table></div>
+    <p class="muted" id="boardEmpty" hidden>No ranked players yet. Sign in and play a public match to be the first.</p>
+  </section>
+
+  <section id="s-lobby" class="card" hidden>
+    <h2 id="lTitle">Waiting room</h2>
+    <div class="stack" id="lPrivate">
+      <div><p class="muted">Room code</p><div class="code" id="lCode"></div></div>
+      <div class="row"><input id="lLink" readonly style="flex:1;min-width:220px;font-family:'JetBrains Mono',monospace" aria-label="Invite link"><button class="primary" id="copy">Copy link</button></div>
+    </div>
+    <div class="timer" id="lTimerBox" hidden><small id="lTimerLabel"></small><b id="lTimer">--</b></div>
+    <div class="row"><b id="lCount"></b></div>
+    <div class="players" id="lPlayers"></div>
+    <div class="row"><button class="primary" id="start">Start match</button><button class="primary" id="startNow" hidden>Start now with bots</button><button id="leave">Leave room</button></div>
+    <p class="muted" id="lHint"></p>
+    <p class="err" id="lErr" role="alert"></p>
+  </section>
+
+  <section id="s-race" hidden style="display:flex;flex-direction:column;gap:20px">
+    <div class="stats">
+      <div class="stat main"><small id="wpmLabel">Speed (WPM)</small><b id="wpm">0</b></div>
+      <div class="stat"><small>Accuracy</small><b id="acc">100%</b></div>
+      <div class="stat"><small>Time</small><b id="time">0.0s</b></div>
+    </div>
+    <div class="bar" role="progressbar" aria-label="Your progress"><i id="bar"></i></div>
+    <div class="box wait" id="box">
+      <div id="text" aria-label="Passage to type"></div>
+      <textarea id="ta" aria-label="Type here" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" disabled></textarea>
+      <div id="overlay"></div>
+    </div>
+    <div class="row" style="justify-content:space-between"><p class="muted" id="raceMsg" style="flex:1;min-width:200px"></p><button id="sceneToggle" hidden>Hide scene</button></div>
+    <div class="scene" id="sceneWrap" hidden>
+      <canvas id="scene" role="img" aria-label="Race scene"></canvas>
+      <p class="muted" id="standing"></p>
+    </div>
+    <div class="card" id="boardCard"><h2>Live race</h2><div class="board" id="board"></div></div>
+  </section>
+
+  <section id="s-results" class="card" hidden>
+    <h2>Results</h2>
+    <div class="table-scroll"><table>
+      <thead><tr><th>#</th><th>Player</th><th class="num">Avg WPM</th><th class="num">Accuracy</th><th class="num">Score</th><th class="num">Time</th><th class="num">Rating</th></tr></thead>
+      <tbody id="resBody"></tbody>
+    </table></div>
+    <p class="muted" id="rRating"></p>
+    <p class="muted">Score = WPM × accuracy². The server rebuilds every result from your keystroke log, so results it can’t verify are ranked below verified ones.</p>
+    <div class="row"><button class="primary" id="rematch">Rematch</button><button class="primary" id="findNew" hidden>Find new match</button><button id="leave2">Leave room</button></div>
+    <p class="muted" id="rHint"></p>
+    <p class="err" id="rErr" role="alert"></p>
+  </section>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/scene.js"></script>
+<script>
+(function(){
+  var MAX_EXTRA=10;
+  var $=function(id){return document.getElementById(id)};
+  // A random secret kept in this tab (sessionStorage): the server uses it to recognise you after a refresh or a lost connection.
+  function randomToken(){
+    var a=new Uint8Array(24);
+    if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<a.length;i++)a[i]=Math.floor(Math.random()*256);
+    return Array.prototype.map.call(a,function(b){return ('0'+b.toString(16)).slice(-2)}).join('');
+  }
+  function getToken(){
+    try{var t=sessionStorage.getItem('ta-token');if(!t){t=randomToken();sessionStorage.setItem('ta-token',t)}return t}
+    catch(e){return randomToken()}
+  }
+  function getSession(){try{return localStorage.getItem('ta-session')||''}catch(e){return ''}}
+  function setSession(t){try{if(t)localStorage.setItem('ta-session',t);else localStorage.removeItem('ta-session')}catch(e){}}
+  var socket=io({auth:function(cb){cb({token:getToken(),session:getSession()})}});
+  var offset=0,me=null,state=null,prog={},race=null,tickTimer=null,sendTimer=null,lastSent='';
+  var SCREENS=['home','lobby','race','results'];
+  function show(n){
+    SCREENS.forEach(function(s){$('s-'+s).hidden=s!==n});
+    $('s-board').hidden=n!=='home';
+    if(n==='home'){loadBoard();refreshMe()}
+  }
+  function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+  function now(){return Date.now()+offset}
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+  function colorOf(id){var h=0;for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))%360;return 'linear-gradient(135deg,hsl('+h+',80%,60%),hsl('+((h+60)%360)+',80%,55%))'}
+  function emit(ev,data){return new Promise(function(res){if(data===undefined)socket.emit(ev,res);else socket.emit(ev,data,res)})}
+
+  // ---- connection and clock sync ----
+  async function syncClock(){
+    var best=null;
+    for(var i=0;i<5;i++){
+      var t1=Date.now(),ts=await new Promise(function(r){socket.emit('time',r)}),t2=Date.now(),rtt=t2-t1;
+      if(!best||rtt<best.rtt)best={rtt:rtt,off:ts-(t1+t2)/2};
+      await sleep(40);
+    }
+    offset=best.off;
+  }
+  socket.on('connect',async function(){
+    $('conn').textContent='Connected';
+    await syncClock();
+    var r=await emit('resume'); // already in a room (refresh, or the connection dropped)? the server puts us back in it
+    if(r&&r.ok){me=r.you;if(state)route()}
+    else{
+      var wasIn=!!state;
+      state=null;stopRace();clearSavedRace();show('home');
+      if(wasIn)$('homeErr').textContent='You were away for too long, so you left the room. Create or join a room again.';
+    }
+  });
+  socket.on('disconnect',function(){
+    $('conn').textContent='Connection lost. Reconnecting…';
+    if(race&&!race.done&&state&&state.status==='racing')$('raceMsg').textContent='Connection lost. Keep typing: your progress is saved and is sent as soon as you are back.';
+  });
+  socket.on('connect_error',function(){$('conn').textContent='Cannot reach the server. Retrying…'});
+
+  // ---- accounts and leaderboard ----
+  var user=null;
+  function api(method,path,body){
+    var h={'content-type':'application/json'},t=getSession();if(t)h.authorization='Bearer '+t;
+    return fetch(path,{method:method,headers:h,body:body?JSON.stringify(body):undefined}).then(function(r){
+      return r.json().catch(function(){return {}}).then(function(j){return {status:r.status,json:j}});
+    });
+  }
+  function renderAccount(){
+    $('acctOut').hidden=!!user;$('acctIn').hidden=!user;
+    if(user)$('acctLine').textContent=user.username+' · Rating '+user.rating+' · '+user.games+(user.games===1?' game':' games');
+  }
+  function refreshMe(){
+    if(!getSession()){user=null;renderAccount();return Promise.resolve()}
+    return api('GET','/api/me').then(function(r){
+      if(r.status===200)user=r.json.user;else if(r.status===401){user=null;setSession('')}
+      renderAccount();
+    }).catch(function(){});
+  }
+  function loadBoard(){
+    return api('GET','/api/leaderboard?limit=20').then(function(r){
+      var body=$('boardBody');body.textContent='';
+      var list=(r.json&&r.json.players)||[];
+      $('boardEmpty').hidden=list.length>0;
+      list.forEach(function(p){
+        var tr=document.createElement('tr');if(user&&p.username===user.username)tr.className='me';
+        [[p.rank,''],[p.username,''],[p.rating,'num'],[p.wins,'num'],[p.games,'num'],[Math.round(p.bestWpm),'num']].forEach(function(c){tr.appendChild(el('td',c[1],String(c[0])))});
+        var link=document.createElement('a');link.href='/u/'+encodeURIComponent(p.username);link.textContent=p.username;link.style.color='inherit';
+        tr.children[1].textContent='';tr.children[1].appendChild(link);
+        body.appendChild(tr);
+      });
+    }).catch(function(){});
+  }
+  async function authenticate(kind){
+    $('acctErr').textContent='';
+    var r=await api('POST','/api/'+kind,{username:$('uName').value.trim(),password:$('uPass').value});
+    if(r.status!==200&&r.status!==201){$('acctErr').textContent=r.json.error||'Something went wrong. Try again.';return}
+    setSession(r.json.token);user=r.json.user;$('uPass').value='';renderAccount();
+    socket.disconnect();socket.connect(); // reconnect so the server knows who you are
+  }
+  $('login').onclick=function(){authenticate('login')};
+  $('register').onclick=function(){authenticate('register')};
+  $('uPass').addEventListener('keydown',function(e){if(e.key==='Enter')authenticate('login')});
+  $('logout').onclick=async function(){await api('POST','/api/logout');setSession('');user=null;renderAccount();socket.disconnect();socket.connect()};
+
+  // ---- home ----
+  var m=location.pathname.match(/^\/j\/([A-Za-z0-9]{6})/);
+  if(m){$('code').value=m[1].toUpperCase()}
+  try{$('name').value=sessionStorage.getItem('ta-name')||''}catch(e){}
+  function nameVal(){if(user)return user.username;var n=$('name').value.trim();try{sessionStorage.setItem('ta-name',n)}catch(e){}return n}
+  $('create').onclick=async function(){
+    var r=await emit('create_room',nameVal());
+    if(!r.ok){$('homeErr').textContent=r.error||'Could not create the room.';return}
+    me=r.you;history.replaceState(null,'','/j/'+r.code);
+  };
+  $('join').onclick=async function(){
+    var r=await emit('join_room',{name:nameVal(),code:$('code').value});
+    if(!r.ok){$('homeErr').textContent=r.error;return}
+    me=r.you;history.replaceState(null,'','/j/'+r.code);
+  };
+  $('quick').onclick=async function(){
+    var r=await emit('quick_match',nameVal());
+    if(!r.ok){$('homeErr').textContent=r.error||'Could not find a match.';return}
+    me=r.you;history.replaceState(null,'','/');
+  };
+  $('code').addEventListener('input',function(){$('code').value=$('code').value.toUpperCase()});
+  function leaveRoom(){socket.emit('leave_room');state=null;stopRace();clearSavedRace();history.replaceState(null,'','/');$('homeErr').textContent='';show('home')}
+  $('leave').onclick=leaveRoom;$('leave2').onclick=leaveRoom;
+
+  // ---- state routing ----
+  socket.on('room_state',function(s){state=s;prog={};route()});
+  socket.on('progress',function(list){list.forEach(function(p){prog[p.id]=p});if(state&&(state.status==='racing'||state.status==='countdown'))renderBoard()});
+  function route(){
+    if(!state||state.status!=='lobby'||!state.isPublic){clearInterval(lobbyTimer);lobbyTimer=null}
+    if(!state){show('home');return}
+    var s=state;
+    if(s.status==='lobby'){stopRace();clearSavedRace();renderLobby();show('lobby')}
+    else if(s.status==='countdown'||s.status==='racing'){if(!race||race.startAt!==s.startAt)beginRace(s);renderBoard();show('race');applyScene()}
+    else if(s.status==='results'){stopRace();clearSavedRace();renderResults();show('results')}
+  }
+  function isHost(){return state&&state.hostId===me}
+
+  // ---- lobby ----
+  var lobbyTimer=null;
+  function pad2(n){return n<10?'0'+n:''+n}
+  function tickLobby(){
+    if(!state||state.status!=='lobby'||!state.isPublic)return;
+    if(state.autoStartAt>0){
+      var sec=Math.max(0,Math.ceil((state.autoStartAt-now())/1000));
+      $('lTimer').textContent=Math.floor(sec/60)+':'+pad2(sec%60);
+      $('lTimerLabel').textContent=state.players.length>=state.maxPlayers?'Lobby full. Match starts in':'Match starts in';
+    }else{
+      $('lTimer').textContent='--';
+      $('lTimerLabel').textContent='Waiting for more players (at least '+state.minPlayers+' needed)';
+    }
+  }
+  function renderLobby(){
+    var s=state,pub=s.isPublic;
+    $('lTitle').textContent=pub?'Public lobby':'Waiting room';
+    $('lPrivate').hidden=pub;$('lTimerBox').hidden=!pub;
+    if(!pub){$('lCode').textContent=s.code;$('lLink').value=location.origin+'/j/'+s.code}
+    var n=s.players.filter(function(p){return p.connected}).length;
+    $('lCount').textContent=n+' of '+s.maxPlayers+' players';
+    var box=$('lPlayers');box.textContent='';
+    s.players.forEach(function(p){
+      var d=el('div','pl'+(p.id===me?' me':''));
+      var av=el('div','av');av.style.background=colorOf(p.id);d.appendChild(av);
+      d.appendChild(el('span','n',p.name+(p.id===me?' (you)':'')));
+      if(!pub&&p.id===s.hostId)d.appendChild(el('span','tag','HOST'));
+      if(p.signedIn)d.appendChild(el('span','tag off',String(p.rating)));
+      if(p.away)d.appendChild(el('span','tag off','Reconnecting'));
+      box.appendChild(d);
+    });
+    if(pub){for(var k=n;k<s.maxPlayers;k++){var e=el('div','pl empty');e.appendChild(el('span','n','Waiting for player'));box.appendChild(e)}}
+    var enough=n>=s.minPlayers;
+    $('start').hidden=pub||!isHost();$('start').disabled=!enough;
+    $('startNow').hidden=!(pub&&s.botsOn&&n===1);
+    clearInterval(lobbyTimer);lobbyTimer=null;
+    if(pub){tickLobby();lobbyTimer=setInterval(tickLobby,250);$('lHint').textContent='Rated match: '+(user?'your rating changes when at least 2 signed-in players race.':'sign in on the home screen to earn a rating.')+(s.botsOn?' Empty seats are filled with bots, marked BOT, which never change ratings.':'')+' It starts automatically and you can leave any time.'}
+    else $('lHint').textContent=isHost()?(enough?'Everyone here? Start the match.':'You need at least '+s.minPlayers+' players to start. Share the link above.'):'Waiting for the host to start the match.';
+    $('lErr').textContent='';
+  }
+  $('copy').onclick=async function(){
+    var v=$('lLink').value;
+    try{await navigator.clipboard.writeText(v);$('copy').textContent='Copied'}
+    catch(e){$('lLink').select();document.execCommand&&document.execCommand('copy');$('copy').textContent='Copied'}
+    setTimeout(function(){$('copy').textContent='Copy link'},1500);
+  };
+  $('startNow').onclick=async function(){var r=await emit('start_now');if(!r.ok)$('lErr').textContent=r.error};
+  $('start').onclick=async function(){var r=await emit('start_match');if(!r.ok)$('lErr').textContent=r.error};
+
+  // ---- race: the same word-based typing engine as the prototype ----
+  function normalize(v,words){
+    var parts=v.replace(/^ +/,'').replace(/ {2,}/g,' ').split(' ');
+    if(parts.length>words.length)parts.length=words.length;
+    var last=parts.length-1;parts[last]=parts[last].slice(0,words[last].length+MAX_EXTRA);
+    return parts.join(' ');
+  }
+  function isComplete(typed,words){var p=typed.split(' ');return p.length===words.length&&p[p.length-1].length>=words[words.length-1].length}
+  function correctCount(typed,words){
+    var parts=typed.split(' '),n=0;
+    for(var w=0;w<parts.length&&w<words.length;w++){
+      var T=parts[w],W=words[w];
+      for(var i=0;i<T.length&&i<W.length;i++)if(T[i]===W[i])n++;
+      if(w<parts.length-1&&T===W)n++;
+    }
+    return n;
+  }
+  // ---- race scene: stick figures run toward the finish at the pace of the players' typing ----
+  // The kicks and punches when someone overtakes are only for show. Positions come from real progress and scores from the server.
+  var scene=null,sceneOn=true,lastStanding='';
+  try{
+    var pref=localStorage.getItem('ta-scene');
+    sceneOn=pref?pref==='on':!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }catch(e){}
+  function sceneData(){
+    var ps=(state&&state.players)||[];
+    return{running:!!(race&&race.go),refWpm:race?(race.liveWpm||0):0,players:ps.map(function(p){
+      var isMe=p.id===me,live=prog[p.id],fin=p.finished,ms=p.result?p.result.timeMs:null,pct,wpm;
+      if(isMe&&race){
+        fin=fin||race.done;pct=race.done?100:Math.min(100,race.typed.length/race.text.length*100);wpm=race.liveWpm||0;
+        if(race.done&&ms==null)ms=race.tEnd-race.startAt;
+      }else{pct=fin?100:(live?live.pct:p.pct);wpm=live?live.wpm:p.liveWpm}
+      return{id:p.id,name:p.name,me:isMe,bot:!!p.bot,pct:pct||0,wpm:wpm||0,finished:!!fin,finishMs:ms,look:p.look};
+    })};
+  }
+  // the world you picked in the Locker (only you see it; the colour, hat and trail you picked are seen by everyone)
+  function myWorld(){return (user&&user.look&&user.look.world)||'dusk'}
+  function applyScene(){
+    if(!scene&&window.TypeScene)scene=TypeScene.createScene($('scene'),{getData:sceneData,world:myWorld()});
+    var ok=!!(scene&&scene.supported);
+    if(ok)scene.setWorld(myWorld());
+    $('sceneToggle').hidden=!ok;$('sceneWrap').hidden=!(ok&&sceneOn);$('boardCard').hidden=ok&&sceneOn;
+    $('sceneToggle').textContent=sceneOn?'Hide scene':'Show scene';
+    if(ok){if(sceneOn)scene.start();else scene.stop()}
+  }
+  function updateStanding(){
+    var t=scene.summary();
+    if(t!==lastStanding){lastStanding=t;$('standing').textContent=t;$('scene').setAttribute('aria-label','Race scene. '+t)}
+  }
+  $('sceneToggle').onclick=function(){
+    sceneOn=!sceneOn;try{localStorage.setItem('ta-scene',sceneOn?'on':'off')}catch(e){}
+    applyScene();
+  };
+  window.addEventListener('resize',function(){if(scene&&scene.supported&&sceneOn)scene.autosize()});
+
+  // Keep the race in this tab so a refresh in the middle of a race can carry on where it stopped.
+  function saveRace(){
+    if(!race)return;
+    try{sessionStorage.setItem('ta-race',JSON.stringify({startAt:race.startAt,typed:race.typed,log:race.log,total:race.total,errors:race.errors,done:race.done}))}catch(e){}
+  }
+  function clearSavedRace(){try{sessionStorage.removeItem('ta-race')}catch(e){}}
+  function loadSavedRace(startAt){
+    try{var o=JSON.parse(sessionStorage.getItem('ta-race')||'null');if(o&&o.startAt===startAt&&typeof o.typed==='string'&&Array.isArray(o.log))return o}catch(e){}
+    return null;
+  }
+  function beginRace(s){
+    stopRace();
+    race={startAt:s.startAt,text:s.passage,words:s.passage.split(' '),typed:'',log:[],total:0,errors:0,done:false,go:false,tEnd:0};
+    var sv=loadSavedRace(s.startAt);
+    if(sv){
+      race.typed=normalize(sv.typed,race.words);race.log=sv.log;race.total=sv.total|0;race.errors=sv.errors|0;race.done=!!sv.done;
+      if(race.done)race.tEnd=race.startAt+(race.log.length?race.log[race.log.length-1][0]:0);
+    }
+    var ta=$('ta');ta.value='';ta.disabled=true;
+    $('raceMsg').textContent=sv?'Welcome back. Carry on where you stopped.':'Get ready. The text unlocks when the countdown ends.';
+    $('box').classList.add('wait');
+    renderText();stats();
+    if(race.done){$('raceMsg').textContent='Finished. Waiting for the other players…';submit()}
+    tickTimer=setInterval(tick,100);
+    sendTimer=setInterval(function(){if(race&&race.go&&!race.done&&race.typed!==lastSent){lastSent=race.typed;socket.volatile.emit('progress',race.typed)}},150);
+  }
+  function stopRace(){clearInterval(tickTimer);clearInterval(sendTimer);if(scene)scene.stop();race=null;lastSent='';$('overlay').textContent=''}
+  function tick(){
+    if(!race)return;
+    var left=race.startAt-now();
+    if(!race.go){
+      if(left>0){$('overlay').textContent=Math.ceil(left/1000)}
+      else{race.go=true;$('overlay').textContent='Go';setTimeout(function(){if(race)$('overlay').textContent=''},500);
+        if(!race.done){var ta=$('ta');ta.disabled=false;ta.value=race.typed;ta.focus({preventScroll:true});$('box').classList.remove('wait');
+        if(race.typed.length===0)$('raceMsg').textContent='Type the text. Press space to jump to the next word.'}}
+    }
+    stats();
+    if(scene&&scene.supported&&sceneOn)updateStanding();
+  }
+  function renderText(){
+    var typedParts=race.typed.split(' '),cw=typedParts.length-1,frag=document.createDocumentFragment();
+    function mk(c,ch){var s=document.createElement('span');if(c)s.className=c;s.textContent=ch;return s}
+    function caret(){var c=document.createElement('span');c.className='caret';return c}
+    for(var w=0;w<race.words.length;w++){
+      var W=race.words[w],T=w<=cw?typedParts[w]:null,len=T===null?W.length:Math.max(W.length,T.length);
+      var caretAt=(w===cw&&race.go&&!race.done)?T.length:-1,wEl=document.createElement('span');wEl.className='w';
+      for(var i=0;i<len;i++){
+        if(i===caretAt)wEl.appendChild(caret());
+        if(i>=W.length){wEl.appendChild(mk('bad',T[i]));continue}
+        if(T===null||(i>=T.length&&w===cw))wEl.appendChild(mk('',W[i]));
+        else if(i>=T.length)wEl.appendChild(mk('miss',W[i]));
+        else wEl.appendChild(mk(T[i]===W[i]?'ok':'bad',W[i]));
+      }
+      if(caretAt===len)wEl.appendChild(caret());
+      frag.appendChild(wEl);
+      if(w<race.words.length-1)frag.appendChild(mk('',' '));
+    }
+    $('text').innerHTML='';$('text').appendChild(frag);
+    $('bar').style.width=Math.min(100,Math.round(race.typed.length/race.text.length*100))+'%';
+  }
+  function stats(){
+    if(!race)return;
+    var ms=Math.max(0,(race.done?race.tEnd:now())-race.startAt);
+    var avg=ms>=1000?Math.round(correctCount(race.typed,race.words)/5/(ms/60000)):0;
+    var live=0;
+    if(ms>=1000){var win=Math.min(5000,ms),from=ms-win,c=0;for(var i=race.log.length-1;i>=0&&race.log[i][0]>=from;i--)if(race.log[i][2])c++;live=Math.round(c/5/(win/60000))}
+    race.liveWpm=live;$('wpm').textContent=race.done?avg:live;$('wpmLabel').textContent=race.done?'Average WPM':'Speed (WPM)';
+    $('acc').textContent=(race.total?Math.round((race.total-race.errors)/race.total*100):100)+'%';
+    $('time').textContent=(race.go?ms/1000:0).toFixed(1)+'s';
+  }
+  var ta=$('ta');
+  ta.addEventListener('beforeinput',function(e){if(/^insertFrom(Paste|Drop|PasteAsQuotation)$/.test(e.inputType))e.preventDefault()});
+  ['paste','drop','cut','copy','contextmenu'].forEach(function(n){ta.addEventListener(n,function(e){e.preventDefault()})});
+  ta.addEventListener('keydown',function(e){
+    if(['ArrowLeft','ArrowUp','ArrowDown','Home','PageUp','PageDown'].indexOf(e.key)>-1)e.preventDefault();
+    if((e.ctrlKey||e.metaKey)&&['a','x','c','v','z','y'].indexOf(e.key.toLowerCase())>-1)e.preventDefault();
+  });
+  function caretToEnd(){var n=ta.value.length;try{ta.setSelectionRange(n,n)}catch(e){}}
+  ['select','click','mouseup','focus','keyup'].forEach(function(n){ta.addEventListener(n,caretToEnd)});
+  ta.addEventListener('input',function(){
+    if(!race||!race.go||race.done){ta.value=race?race.typed:'';return}
+    var v=normalize(ta.value,race.words);if(v!==ta.value)ta.value=v;
+    var errBefore=race.errors,t=Math.max(0,Math.round(now()-race.startAt)),prev=race.typed,p=0;
+    while(p<prev.length&&p<v.length&&prev[p]===v[p])p++;
+    for(var k=p;k<prev.length;k++)race.log.push([t,'\b',0]);
+    var s=v.slice(0,p);
+    for(var k2=p;k2<v.length;k2++){
+      var c=v[k2],wi=s.split(' ').length-1,T=s.slice(s.lastIndexOf(' ')+1),W=race.words[wi]||'',ok;
+      if(c===' '){ok=T===W;race.total++;if(T.length<W.length)race.errors++}
+      else{ok=T.length<W.length&&c===W[T.length];race.total++;if(!ok)race.errors++}
+      race.log.push([t,c,ok?1:0]);race.streak=ok?(race.streak||0)+1:0;s+=c;
+    }
+    race.typed=v;renderText();stats();saveRace();
+    if(scene){if(race.errors>errBefore)scene.stumble(me);scene.setStreak(me,race.streak||0)}
+    if(isComplete(v,race.words))finishRace();
+  });
+  function finishRace(){
+    race.done=true;race.tEnd=now();ta.disabled=true;renderText();stats();saveRace();
+    $('raceMsg').textContent='Finished. Waiting for the other players…';
+    submit();
+  }
+  // The server rebuilds your result from this log; it never trusts a number sent by the browser.
+  // If the connection is down, the browser holds the message and sends it as soon as you are back.
+  async function submit(){
+    var log=race.log.map(function(e){return [e[0],e[1]]});
+    var r=await emit('finish',{log:log});
+    if(r&&!r.ok&&race)$('raceMsg').textContent='The server could not verify your run: '+r.error;
+  }
+  function renderBoard(){
+    var box=$('board');box.textContent='';
+    state.players.forEach(function(p){
+      var live=prog[p.id],pct=p.finished?100:(live?live.pct:p.pct),wpm=p.finished&&p.result?p.result.wpm:(live?live.wpm:0);
+      var lane=el('div','lane'+(p.id===me?' me':''));
+      lane.appendChild(el('div','nm',p.name+(p.bot?' · BOT':'')+(p.connected?'':(p.away?' (reconnecting)':' (left)'))));
+      var bar=el('div','bar'),i=el('i');i.style.width=pct+'%';bar.appendChild(i);lane.appendChild(bar);
+      lane.appendChild(el('div','wp',Math.round(wpm)+' wpm'));
+      box.appendChild(lane);
+    });
+  }
+
+  // ---- results ----
+  function renderResults(){
+    var body=$('resBody');body.textContent='';
+    state.players.slice().sort(function(a,b){return a.rank-b.rank}).forEach(function(p){
+      var tr=document.createElement('tr');if(p.id===me)tr.className='me';
+      function td(t,c){var d=el('td',c||'',t);tr.appendChild(d);return d}
+      td(String(p.rank));
+      var nm=td(p.name+(p.id===me?' (you)':''));
+      if(p.bot){var bt=el('span','tag off','BOT');bt.style.marginLeft='8px';nm.appendChild(bt)}
+      if(p.result){
+        if(!p.result.verified){nm.appendChild(el('div','warn','Unverified: '+(p.result.note||'')))}
+        td(String(p.result.wpm),'num');td(p.result.accuracy+'%','num');td(String(p.result.score),'num');td((p.result.timeMs/1000).toFixed(1)+'s','num');
+      }else{td('Did not finish','');td('','');td('','');td('','')}
+      if(state.rated&&p.signedIn&&p.ratingChange!==undefined){var c=p.ratingChange;td((p.rating+c)+' ('+(c>0?'+':'')+c+')','num')}
+      else if(state.rated&&p.signedIn)td(String(p.rating),'num');
+      else td('–','num');
+      body.appendChild(tr);
+    });
+    var pub=state.isPublic,mine=state.players.filter(function(p){return p.id===me})[0];
+    var signed=state.players.filter(function(p){return p.signedIn&&!p.bot}).length;
+    $('rRating').textContent=!state.rated?'Private rooms are not rated.':(mine&&!mine.signedIn?'Guests are not rated. Sign in on the home screen to earn a rating from public matches.':(signed<2?'Practice match: ratings only change when at least 2 signed-in players race. Bots never count.':''));
+    $('rematch').hidden=pub||!isHost();$('findNew').hidden=!pub;
+    $('rHint').textContent=(pub||isHost())?'':'Waiting for the host to start a rematch.';
+    $('rErr').textContent='';
+  }
+  $('findNew').onclick=async function(){
+    socket.emit('leave_room');state=null;stopRace();
+    var r=await emit('quick_match',nameVal());
+    if(!r.ok){show('home');$('homeErr').textContent=r.error||'Could not find a match.';return}
+    me=r.you;
+  };
+  $('rematch').onclick=async function(){var r=await emit('rematch');if(!r.ok)$('rErr').textContent=r.error};
+})();
+</script>
+</body>
+</html>

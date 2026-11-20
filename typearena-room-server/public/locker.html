@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Locker · TypeArena</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5FF;--panel:#FFFFFF;--line:#D5DBF5;--text:#12163A;--mute:#5A6396;
+  --ok:#17803D;--accent:#5B3FE0;--bad:#C62828;--chip:#E8EBFF;--brand:#C6FF3D;
+  color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0B0F1E;--panel:#141A33;--line:#2A3366;--text:#E8ECFF;--mute:#9AA3C7;--ok:#C6FF3D;--accent:#7C5CFF;--bad:#FF8A8A;--chip:#1D2447;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#0B0F1E;--panel:#141A33;--line:#2A3366;--text:#E8ECFF;--mute:#9AA3C7;--ok:#C6FF3D;--accent:#7C5CFF;--bad:#FF8A8A;--chip:#1D2447;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
+[hidden]{display:none!important}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 48px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--text);text-decoration:none}
+.logo i{width:36px;height:36px;border-radius:10px;background:var(--brand);color:#0B0F1E;display:flex;align-items:center;justify-content:center;font:700 18px 'JetBrains Mono',monospace;font-style:normal}
+.right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+a.btn{font:500 15px 'Space Grotesk',system-ui,sans-serif;min-height:44px;padding:0 20px;border-radius:12px;border:1px solid var(--line);background:var(--chip);color:var(--text);display:inline-flex;align-items:center;text-decoration:none}
+a.btn.primary{background:var(--brand);border-color:var(--brand);color:#0B0F1E;font-weight:700}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:24px 26px;display:flex;flex-direction:column;gap:14px}
+.card h1,.card h2{margin:0;letter-spacing:-.5px}.card h1{font-size:34px}.card h2{font-size:22px}
+.muted{color:var(--mute);margin:0;font-size:15px}
+canvas#preview{width:100%;display:block;border-radius:18px;border:1px solid var(--line);background:#231F4D}
+.meter{height:10px;border-radius:99px;background:var(--chip);overflow:hidden}.meter i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+button.opt{font:500 15px 'Space Grotesk',system-ui,sans-serif;text-align:left;padding:10px;border-radius:14px;border:2px solid var(--line);background:var(--chip);color:var(--text);cursor:pointer;display:flex;flex-direction:column;gap:6px;min-height:44px}
+button.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--panel)}
+button.opt:disabled{cursor:not-allowed;opacity:.62}
+button.opt canvas{width:100%;border-radius:10px;display:block;background:#231F4D}
+button.opt .lock{font-size:13px;color:var(--mute)}
+.sw{display:flex;align-items:center;gap:10px}
+.dot{width:22px;height:22px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.25)}
+#status{min-height:1.2em}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <a class="logo" href="/"><i>T</i>TypeArena</a>
+    <div class="right"><a class="btn" href="/profile">My profile</a><a class="btn" href="/solo">Solo Sprint</a><a class="btn primary" href="/">Play</a></div>
+  </header>
+
+  <section class="card" id="message"><p class="muted" id="msg">Loading…</p><div><a class="btn" href="/" id="msgLink" hidden>Back to the home screen</a></div></section>
+
+  <div id="content" hidden style="display:flex;flex-direction:column;gap:20px">
+    <section class="card">
+      <h1>Locker</h1>
+      <canvas id="preview" role="img" aria-label="Preview of your runner"></canvas>
+      <p class="muted" id="previewNote">Your colour, hat and trail are seen by everyone in a race. The world is only for your own screen. All of it is for show: it never changes a position, a score or a rating.</p>
+      <div>
+        <p class="muted" id="rank"></p>
+        <div class="meter" aria-hidden="true"><i id="meterFill" style="width:0%"></i></div>
+      </div>
+      <p id="status" class="muted" role="status"></p>
+    </section>
+    <section class="card"><h2>World</h2><div class="grid" id="gWorld"></div></section>
+    <section class="card"><h2>Colour</h2><div class="grid" id="gColor"></div></section>
+    <section class="card"><h2>Hat</h2><div class="grid" id="gHat"></div></section>
+    <section class="card"><h2>Trail</h2><div class="grid" id="gTrail"></div></section>
+  </div>
+</main>
+
+<script src="/scene.js"></script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+  function getSession(){try{return localStorage.getItem('ta-session')||''}catch(e){return ''}}
+  function api(method,path,body){
+    var h={'content-type':'application/json'},t=getSession();if(t)h.authorization='Bearer '+t;
+    return fetch(path,{method:method,headers:h,body:body?JSON.stringify(body):undefined}).then(function(r){return r.json().catch(function(){return {}}).then(function(j){return {status:r.status,json:j}})});
+  }
+  function say(text,link){$('msg').textContent=text;$('msgLink').hidden=!link;$('message').hidden=false;$('content').hidden=true}
+  var SW={lime:'#C6FF3D',aqua:'#6FE3FF',coral:'#FF8A8A',violet:'#B9A6FF',amber:'#FFB35C',pink:'#FF9FD2',gold:'#FFD76A',rainbow:'linear-gradient(90deg,#ff5f5f,#ffd24d,#5fff8a,#4dc8ff,#b27bff)'};
+  var KINDS=[['world','gWorld'],['color','gColor'],['hat','gHat'],['trail','gTrail']];
+  var state=null,look=null,preview=null,saveTimer=null,thumbs=[];
+
+  function thumb(canvas,world,lk){ // a small still picture of one option
+    if(!window.TypeScene)return;
+    var sc=TypeScene.createScene(canvas,{world:world,getData:function(){return{running:true,refWpm:70,players:[{id:'me',me:true,name:'',pct:50,wpm:70,look:lk}]}}});
+    if(!sc.supported){canvas.hidden=true;return}
+    sc.resize(canvas.clientWidth||150,canvas.clientWidth?Math.round(canvas.clientWidth*0.55):80,1);
+    for(var i=0;i<24;i++)sc.frame(1/60);
+  }
+  function previewLook(){return{color:look.color,hat:look.hat,trail:look.trail}}
+  function buildOption(kind,item){
+    var locked=item.minRating>state.peakRating;
+    var b=el('button','opt');b.type='button';b.disabled=locked;b.setAttribute('aria-pressed',look[kind]===item.id?'true':'false');
+    if(kind==='color'){var row=el('span','sw'),dot=el('span','dot');dot.style.background=SW[item.id]||'#888';row.appendChild(dot);row.appendChild(el('span','',item.name));b.appendChild(row)}
+    else{
+      var cv=document.createElement('canvas');cv.width=150;cv.height=80;b.appendChild(cv);b.appendChild(el('span','',item.name));
+      thumbs.push(function(){
+        var lk={color:kind==='color'?item.id:look.color,hat:kind==='hat'?item.id:look.hat,trail:kind==='trail'?item.id:look.trail};
+        if(kind==='hat'||kind==='trail'){lk.color=look.color==='rainbow'?'rainbow':look.color}
+        thumb(cv,kind==='world'?item.id:look.world,lk);
+      });
+    }
+    if(locked)b.appendChild(el('span','lock','Locked: unlocks at rating '+item.minRating));
+    b.title=locked?item.name+' unlocks when your rating reaches '+item.minRating:item.name;
+    b.onclick=function(){choose(kind,item.id)};
+    return b;
+  }
+  function renderOptions(){
+    thumbs=[];
+    KINDS.forEach(function(k){
+      var box=$(k[1]);box.textContent='';
+      state.catalog[k[0]].forEach(function(item){box.appendChild(buildOption(k[0],item))});
+    });
+    // draw the small pictures once the grid is in the page, so they have a width
+    thumbs.forEach(function(f){f()});
+  }
+  function renderRank(){
+    var n=state.next;
+    $('rank').textContent='Peak rating '+state.peakRating+(n?'. Next reward: '+n.name+' at rating '+n.minRating+' ('+(n.minRating-state.peakRating)+' to go).':'. Everything is unlocked.');
+    var fill=0;if(n){var prev=0;Object.keys(state.catalog).forEach(function(k){state.catalog[k].forEach(function(i){if(i.minRating<=state.peakRating&&i.minRating>prev)prev=i.minRating})});fill=Math.round(100*(state.peakRating-prev)/Math.max(1,n.minRating-prev))}else fill=100;
+    $('meterFill').style.width=fill+'%';
+  }
+  function choose(kind,id){
+    if(look[kind]===id)return;
+    look[kind]=id;
+    var pressed=function(k,gid){[].forEach.call($(gid).children,function(b,i){b.setAttribute('aria-pressed',state.catalog[k][i].id===look[k]?'true':'false')})};
+    KINDS.forEach(function(k){pressed(k[0],k[1])});
+    if(preview){preview.setWorld(look.world)}
+    // the little pictures of hats and trails use your current colour and world
+    if(kind==='color'||kind==='world')thumbs.forEach(function(f){f()});
+    $('status').className='muted';$('status').textContent='Saving…';
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(function(){
+      api('PUT','/api/look',look).then(function(r){
+        if(r.status===200){$('status').className='ok';$('status').textContent='Saved. Your new look is used in your next race.'}
+        else{$('status').className='bad';$('status').textContent=(r.json&&r.json.error)||'Could not save. Try again.'}
+      }).catch(function(){$('status').className='bad';$('status').textContent='Could not reach the server. Try again.'});
+    },250);
+  }
+  function start(){
+    $('message').hidden=true;$('content').hidden=false;
+    renderRank();renderOptions();
+    if(window.TypeScene){
+      preview=TypeScene.createScene($('preview'),{world:look.world,getData:function(){
+        return{running:true,refWpm:70,players:[{id:'me',me:true,name:'You',pct:48,wpm:70,look:previewLook()}]};
+      }});
+      if(preview.supported)preview.start();else{$('preview').hidden=true;$('previewNote').textContent='Your browser cannot draw the preview, but you can still choose your look below.'}
+    }
+  }
+  if(!getSession()){say('Sign in on the home screen to open your locker.',true)}
+  else api('GET','/api/cosmetics').then(function(r){
+    if(r.status!==200||!r.json.look){
+      if(r.json&&r.json.catalog&&!r.json.look){try{localStorage.removeItem('ta-session')}catch(e){}say('Your sign-in has expired. Sign in again on the home screen.',true)}
+      else say('Could not load your locker. Try again in a moment.',true);
+      return;
+    }
+    state=r.json;look={world:r.json.look.world,color:r.json.look.color,hat:r.json.look.hat,trail:r.json.look.trail};start();
+  }).catch(function(){say('Could not reach the server. Try again in a moment.',true)});
+  window.addEventListener('resize',function(){if(preview&&preview.supported)preview.autosize()});
+})();
+</script>
+</body>
+</html>

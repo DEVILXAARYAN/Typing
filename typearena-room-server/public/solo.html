@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solo Sprint · TypeArena</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5FF;--panel:#FFFFFF;--line:#D5DBF5;--text:#12163A;--mute:#5A6396;
+  --ok:#17803D;--accent:#5B3FE0;--bad:#C62828;--pending:#7A83B0;--chip:#E8EBFF;--brand:#C6FF3D;
+  color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0B0F1E;--panel:#141A33;--line:#2A3366;--text:#E8ECFF;--mute:#9AA3C7;--ok:#C6FF3D;--accent:#7C5CFF;--bad:#FF8A8A;--pending:#6E78A8;--chip:#1D2447;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#0B0F1E;--panel:#141A33;--line:#2A3366;--text:#E8ECFF;--mute:#9AA3C7;--ok:#C6FF3D;--accent:#7C5CFF;--bad:#FF8A8A;--pending:#6E78A8;--chip:#1D2447;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
+[hidden]{display:none!important}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 48px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--text);text-decoration:none}
+.logo i{width:36px;height:36px;border-radius:10px;background:var(--brand);color:#0B0F1E;display:flex;align-items:center;justify-content:center;font:700 18px 'JetBrains Mono',monospace;font-style:normal}
+.right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{background:var(--chip);border-radius:999px;padding:8px 16px;font-size:14px;color:var(--mute)}
+a.btn,button{font:500 15px 'Space Grotesk',system-ui,sans-serif;min-height:44px;padding:0 20px;border-radius:12px;border:1px solid var(--line);background:var(--chip);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;text-decoration:none}
+button.primary{background:var(--brand);border-color:var(--brand);color:#0B0F1E;font-weight:700}
+button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+a.btn:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.modes,.actions{display:flex;gap:8px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px 18px}
+.stat small{display:block;font-size:14px;color:var(--mute)}
+.stat b{display:block;font:700 34px 'JetBrains Mono',ui-monospace,monospace;margin-top:4px}
+.stat.main b{color:var(--ok)}
+.bar{height:10px;border-radius:99px;background:var(--chip);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .12s}
+.box{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:28px 30px;min-height:190px}
+.box:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+#text{font:500 clamp(20px,3.2vw,28px)/1.75 'JetBrains Mono',ui-monospace,monospace;color:var(--pending);white-space:pre-wrap;word-break:break-word}
+#text span.ok{color:var(--ok)}#text span.bad{color:var(--bad)}
+#text .w{white-space:nowrap}
+#text span.miss{text-decoration:underline;text-decoration-color:var(--bad);text-underline-offset:.2em}
+#text .caret{display:inline-block;position:relative;width:0;height:1.3em;vertical-align:text-bottom}
+#text .caret::before{content:"";position:absolute;left:-1px;top:0;width:2px;height:100%;border-radius:1px;background:var(--accent);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion: reduce){#text .caret::before{animation:none}}
+.box:not(:focus-within) #text{opacity:.45}
+#ta{position:absolute;inset:0;width:100%;height:100%;opacity:0;resize:none;border:0;padding:0;font-size:16px;cursor:text}
+#hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;pointer-events:none}
+.box:focus-within #hint,.box.done #hint{display:none}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:26px 28px;display:flex;flex-direction:column;gap:16px}
+.card h2{margin:0;font-size:26px;letter-spacing:-.5px}
+#result{border:2px solid var(--ok)}
+.titlerow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.level{background:var(--brand);color:#0B0F1E;font-weight:700;border-radius:999px;padding:6px 16px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 20px}
+.grid div small{display:block;font-size:14px;color:var(--mute)}
+.grid div b{font:700 30px 'JetBrains Mono',ui-monospace,monospace}
+.grid div.big b{font-size:44px;color:var(--ok)}
+.muted{color:var(--mute);margin:0;font-size:15px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:4px 14px;font:500 16px 'JetBrains Mono',ui-monospace,monospace}
+svg.chart{width:100%;height:auto;display:block}
+ul.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ul.hist li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:15px;flex-wrap:wrap}
+ul.hist li:first-child{border-top:0}
+ul.hist li b{font-family:'JetBrains Mono',ui-monospace,monospace}
+ul.hist li.pb b{color:var(--ok)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,1fr)}.box{padding:20px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <a class="logo" href="/"><i>T</i>TypeArena</a>
+    <div class="right"><span class="badge">Solo Sprint</span><a class="btn" id="profileLink" href="/profile" hidden>My profile</a><a class="btn" href="/">Back to games</a></div>
+  </header>
+
+  <div>
+    <h1 style="margin:0;font-size:34px;letter-spacing:-1px">Test your speed</h1>
+    <p class="muted" style="margin-top:6px">Pick a text, type it, and get your WPM, accuracy and consistency. Press space to jump to the next word.</p>
+    <p class="muted" id="acctNote" style="margin-top:6px"></p>
+  </div>
+
+  <div class="modes" role="group" aria-label="Choose the text">
+    <button data-mode="passage" class="on" aria-pressed="true">Passage</button>
+    <button data-mode="10" aria-pressed="false">10 words</button>
+    <button data-mode="25" aria-pressed="false">25 words</button>
+    <button data-mode="50" aria-pressed="false">50 words</button>
+  </div>
+
+  <section class="stats">
+    <div class="stat main"><small id="wpmLabel">Speed (WPM)</small><b id="wpm">0</b></div>
+    <div class="stat"><small>Accuracy</small><b id="acc">100%</b></div>
+    <div class="stat"><small>Time</small><b id="time">0.0s</b></div>
+    <div class="stat"><small>Errors</small><b id="err">0</b></div>
+  </section>
+
+  <div class="bar" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="100"><i id="bar"></i></div>
+
+  <div class="box" id="box">
+    <div id="text" aria-label="Text to type"></div>
+    <textarea id="ta" aria-label="Type here" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+    <div id="hint">Click here and start typing</div>
+  </div>
+
+  <div class="actions">
+    <button id="retry">Restart (Esc)</button>
+    <button id="next">New text</button>
+  </div>
+
+  <section id="result" class="card" hidden>
+    <div class="titlerow"><h2>Run complete</h2><span class="level" id="rLevel"></span></div>
+    <div class="grid">
+      <div class="big"><small>Average WPM</small><b id="rWpm">0</b></div>
+      <div><small>Raw WPM (with mistakes)</small><b id="rRaw">0</b></div>
+      <div><small>Accuracy</small><b id="rAcc">0%</b></div>
+      <div><small>Consistency</small><b id="rCons">-</b></div>
+      <div><small>Time</small><b id="rTime">0s</b></div>
+      <div><small>Mistakes made</small><b id="rErr">0</b></div>
+    </div>
+    <p class="muted" id="rBest"></p>
+    <p class="muted" id="rSaved"></p>
+    <div>
+      <p class="muted" style="margin-bottom:8px"><b>Speed during the run</b> (words per minute, second by second; red dots mark seconds with a mistake)</p>
+      <svg class="chart" id="chart" viewBox="0 0 600 200" role="img" aria-label="Speed per second"></svg>
+    </div>
+    <div>
+      <p class="muted" style="margin-bottom:8px"><b>Words to practice</b></p>
+      <div class="chips" id="rWords"></div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="again">Try again</button>
+      <button id="another">New text</button>
+    </div>
+  </section>
+
+  <section class="card" id="histCard">
+    <h2 id="histTitle">Recent runs</h2>
+    <ul class="hist" id="hist"></ul>
+    <p class="muted" id="histEmpty">Your finished runs appear here. They are saved in this browser only.</p>
+    <div class="row"><span class="muted" id="bests"></span><button id="clear">Clear history</button></div>
+  </section>
+</main>
+
+<script>
+(function(){
+  var PASSAGES=[
+    "Every champion was once a beginner who refused to stop typing. Speed is built one clean keystroke at a time.",
+    "The fastest typists are not the ones who rush. They keep a steady rhythm, look ahead of the cursor, and let accuracy carry them forward.",
+    "Rain tapped softly on the window while the keyboard clicked like a small drum. By midnight the whole story was finished and the coffee was cold.",
+    "A good race is won in the first ten seconds and saved in the last ten. Stay calm, breathe out, and trust the practice you have already done.",
+    "Distant mountains turned gold as the morning train crossed the river. Passengers opened their laptops and the carriage filled with quiet typing.",
+    "Learning a new skill feels slow until the day it suddenly feels easy. Keep showing up, and your fingers will remember what your mind forgot.",
+    "Great teams do not wait for perfect plans. They ship a small version, listen to people, fix what is broken, and then make it a little better each week.",
+    "At the edge of the town there was a quiet library with tall windows. Students came in from the heat, found a corner, and read until the lamps came on.",
+    "Typing well is mostly about habit. Sit straight, relax your shoulders, keep your eyes on the text, and let each finger return to its home position.",
+    "The market was full of colour and noise. Sellers called out their prices, children ran between the stalls, and the smell of fresh bread drifted over everything."
+  ];
+  var BANK=("the be to of and a in that have it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us").split(' ');
+  var MODE_LABEL={passage:'Passage','10':'10 words','25':'25 words','50':'50 words'};
+  var $=function(id){return document.getElementById(id)};
+  var ta=$('ta'),box=$('box'),textEl=$('text');
+  var MAX_EXTRA=10;
+  var mode='passage',lastText='',text='',words=[],typed='',started=false,done=false,t0=0,tEnd=0,total=0,errors=0,ev=[],badWords={},timer=null;
+
+  // ---- same word-based rules as the multiplayer game ----
+  function normalize(v){
+    var parts=v.replace(/^ +/,'').replace(/ {2,}/g,' ').split(' ');
+    if(parts.length>words.length)parts.length=words.length;
+    var last=parts.length-1;parts[last]=parts[last].slice(0,words[last].length+MAX_EXTRA);
+    return parts.join(' ');
+  }
+  function isComplete(t){var p=t.split(' ');return p.length===words.length&&p[p.length-1].length>=words[words.length-1].length}
+  function correctCount(t){
+    var parts=t.split(' '),n=0;
+    for(var w=0;w<parts.length&&w<words.length;w++){
+      var T=parts[w],W=words[w];
+      for(var i=0;i<T.length&&i<W.length;i++)if(T[i]===W[i])n++;
+      if(w<parts.length-1&&T===W)n++;
+    }
+    return n;
+  }
+
+  // ---- text ----
+  function makeText(){
+    if(mode==='passage'){
+      var t;do{t=PASSAGES[Math.floor(Math.random()*PASSAGES.length)]}while(t===lastText&&PASSAGES.length>1);
+      return t;
+    }
+    var n=parseInt(mode,10),out=[],prev='';
+    for(var i=0;i<n;i++){var w;do{w=BANK[Math.floor(Math.random()*BANK.length)]}while(w===prev);out.push(w);prev=w}
+    return out.join(' ');
+  }
+  function load(newText){
+    text=newText;lastText=newText;words=text.split(' ');reset();
+  }
+  function reset(){
+    clearInterval(timer);typed='';started=false;done=false;total=0;errors=0;ev=[];badWords={};
+    ta.value='';ta.disabled=false;$('result').hidden=true;box.classList.remove('done');
+    render();stats();ta.focus({preventScroll:true});
+  }
+
+  // ---- display ----
+  function mk(c,ch){var s=document.createElement('span');if(c)s.className=c;s.textContent=ch;return s}
+  function caret(){var c=document.createElement('span');c.className='caret';return c}
+  function render(){
+    var parts=typed.split(' '),cw=parts.length-1,frag=document.createDocumentFragment();
+    for(var w=0;w<words.length;w++){
+      var W=words[w],T=w<=cw?parts[w]:null,len=T===null?W.length:Math.max(W.length,T.length);
+      var caretAt=(w===cw&&!done)?T.length:-1,wEl=document.createElement('span');wEl.className='w';
+      for(var i=0;i<len;i++){
+        if(i===caretAt)wEl.appendChild(caret());
+        if(i>=W.length){wEl.appendChild(mk('bad',T[i]));continue}
+        if(T===null||(i>=T.length&&w===cw))wEl.appendChild(mk('',W[i]));
+        else if(i>=T.length)wEl.appendChild(mk('miss',W[i]));
+        else wEl.appendChild(mk(T[i]===W[i]?'ok':'bad',W[i]));
+      }
+      if(caretAt===len)wEl.appendChild(caret());
+      frag.appendChild(wEl);
+      if(w<words.length-1)frag.appendChild(mk('',' '));
+    }
+    textEl.innerHTML='';textEl.appendChild(frag);
+    var pct=done?100:Math.min(100,Math.round(typed.length/text.length*100));
+    $('bar').style.width=pct+'%';
+    document.querySelector('.bar').setAttribute('aria-valuenow',pct);
+  }
+  function elapsed(){return started?(done?tEnd:performance.now())-t0:0}
+  function liveWpm(ms){
+    if(ms<1000)return 0;
+    var win=Math.min(5000,ms),from=ms-win,c=0;
+    for(var i=ev.length-1;i>=0&&ev[i][0]>=from;i--)if(ev[i][1])c++;
+    return Math.round(c/5/(win/60000));
+  }
+  function stats(){
+    var ms=elapsed();
+    var avg=ms>=1000?Math.round(correctCount(typed)/5/(ms/60000)):0;
+    $('wpm').textContent=done?avg:liveWpm(ms);
+    $('wpmLabel').textContent=done?'Average WPM':'Speed (WPM)';
+    $('acc').textContent=(total?Math.round((total-errors)/total*100):100)+'%';
+    $('time').textContent=(ms/1000).toFixed(1)+'s';$('err').textContent=errors;
+  }
+
+  // ---- input (paste blocked, caret stays at the end) ----
+  ta.addEventListener('beforeinput',function(e){if(/^insertFrom(Paste|Drop|PasteAsQuotation)$/.test(e.inputType))e.preventDefault()});
+  ['paste','drop','cut','copy','contextmenu'].forEach(function(n){ta.addEventListener(n,function(e){e.preventDefault()})});
+  ta.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){e.preventDefault();reset();return}
+    if(['ArrowLeft','ArrowUp','ArrowDown','Home','PageUp','PageDown'].indexOf(e.key)>-1)e.preventDefault();
+    if((e.ctrlKey||e.metaKey)&&['a','x','c','v','z','y'].indexOf(e.key.toLowerCase())>-1)e.preventDefault();
+  });
+  function caretToEnd(){var n=ta.value.length;try{ta.setSelectionRange(n,n)}catch(e){}}
+  ['select','click','mouseup','focus','keyup'].forEach(function(n){ta.addEventListener(n,caretToEnd)});
+
+  ta.addEventListener('input',function(){
+    if(done)return;
+    var v=normalize(ta.value);if(v!==ta.value)ta.value=v;
+    if(!started&&v.length>0){started=true;t0=performance.now();timer=setInterval(stats,100)}
+    var now=Math.round(performance.now()-t0),p=0;
+    while(p<typed.length&&p<v.length&&typed[p]===v[p])p++;
+    var s=v.slice(0,p);
+    for(var k=p;k<v.length;k++){
+      var c=v[k],wi=s.split(' ').length-1,T=s.slice(s.lastIndexOf(' ')+1),W=words[wi]||'',ok;
+      if(c===' '){ok=(T===W);total++;if(T.length<W.length){errors++;badWords[wi]=1}}
+      else{ok=(T.length<W.length&&c===W[T.length]);total++;if(!ok)errors++}
+      if(!ok)badWords[wi]=1;
+      ev.push([now,ok?1:0]);s+=c;
+    }
+    typed=v;render();stats();
+    if(isComplete(typed))finish();
+  });
+
+  // ---- finishing: performance analysis ----
+  function round1(x){return Math.round(x*10)/10}
+  function levelOf(w){return w>=90?'Expert':w>=70?'Fast':w>=50?'Advanced':w>=30?'Intermediate':'Beginner'}
+  function analyse(){
+    var ms=Math.max(1000,tEnd-t0),mins=ms/60000;
+    var secs=Math.ceil(ms/1000),good=new Array(secs).fill(0),bad=new Array(secs).fill(0);
+    ev.forEach(function(e){var i=Math.min(secs-1,Math.floor(e[0]/1000));if(e[1])good[i]++;else bad[i]++});
+    var perSec=good.map(function(g){return g*12}); // characters per second x 60 / 5
+    var use=secs>3?perSec.slice(0,secs-1):perSec;    // the last second is usually only part of a second
+    var mean=use.reduce(function(a,b){return a+b},0)/use.length;
+    var sd=Math.sqrt(use.reduce(function(a,b){return a+(b-mean)*(b-mean)},0)/use.length);
+    return{
+      ms:ms,wpm:round1(correctCount(typed)/5/mins),raw:round1(total/5/mins),
+      acc:total?round1((total-errors)/total*100):100,
+      cons:secs>=3&&mean>0?Math.round(Math.max(0,100*(1-sd/mean))):null,
+      perSec:perSec,bad:bad,
+      practice:Object.keys(badWords).map(Number).sort(function(a,b){return a-b}).map(function(i){return words[i]}).filter(function(w,i,a){return a.indexOf(w)===i}).slice(0,8)
+    };
+  }
+  function drawChart(a){
+    var svg=$('chart'),NS='http://www.w3.org/2000/svg';svg.textContent='';
+    var L=44,R=12,T=12,B=26,W=600,H=200,pw=W-L-R,ph=H-T-B;
+    var sm=a.perSec.map(function(_,i){var lo=Math.max(0,i-1),hi=Math.min(a.perSec.length-1,i+1),s=0,n=0;for(var k=lo;k<=hi;k++){s+=a.perSec[k];n++}return s/n});
+    var top=Math.max(20,Math.ceil(Math.max.apply(null,sm.concat([a.wpm]))*1.2/10)*10);
+    function X(i){return L+(sm.length<=1?pw/2:i*pw/(sm.length-1))}
+    function Y(v){return T+ph-(v/top)*ph}
+    function el(n,at,txt){var e=document.createElementNS(NS,n);for(var k in at)e.setAttribute(k,at[k]);if(txt!=null)e.textContent=txt;svg.appendChild(e);return e}
+    [0,.5,1].forEach(function(f){
+      var y=Y(top*f);el('line',{x1:L,x2:W-R,y1:y,y2:y,style:'stroke:var(--line)','stroke-width':1});
+      el('text',{x:L-8,y:y+4,'text-anchor':'end','font-size':12,style:'fill:var(--mute)'},String(Math.round(top*f)));
+    });
+    el('text',{x:L,y:H-6,'font-size':12,style:'fill:var(--mute)'},'0s');
+    el('text',{x:W-R,y:H-6,'text-anchor':'end','font-size':12,style:'fill:var(--mute)'},(a.perSec.length)+'s');
+    var pts=sm.map(function(v,i){return X(i).toFixed(1)+','+Y(v).toFixed(1)}).join(' ');
+    el('polyline',{points:pts,fill:'none',style:'stroke:var(--accent)','stroke-width':3,'stroke-linejoin':'round','stroke-linecap':'round'});
+    sm.forEach(function(v,i){el('circle',{cx:X(i),cy:Y(v),r:3.5,style:'fill:var(--accent)'})});
+    a.bad.forEach(function(n,i){if(n)el('circle',{cx:X(i),cy:Y(sm[i])-12,r:4,style:'fill:var(--bad)'})});
+    svg.setAttribute('aria-label','Speed per second. Average '+a.wpm+' words per minute over '+a.perSec.length+' seconds.');
+  }
+
+  // ---- saved results (this browser only) ----
+  function load_(k,def){try{var v=JSON.parse(localStorage.getItem(k));return v==null?def:v}catch(e){return def}}
+  function save_(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  function renderHistory(){
+    var signed=!!(acct&&acct.user);
+    var hist=signed?acct.recent.slice(0,8):load_('typearena-solo-history',[]),best=signed?acct.bests:load_('typearena-solo-best',{});
+    $('histTitle').textContent=signed?'Your recent runs (saved to your account)':'Recent runs (this browser only)';
+    var ul=$('hist');ul.textContent='';
+    hist.forEach(function(h){
+      var when=h.at||h.t,acc=h.accuracy!=null?h.accuracy:h.acc;
+      var li=document.createElement('li');if(best[h.mode]===h.wpm)li.className='pb';
+      var left=document.createElement('span');left.textContent=new Date(when).toLocaleDateString()+' · '+(MODE_LABEL[h.mode]||h.mode);
+      var right=document.createElement('span');var b=document.createElement('b');b.textContent=h.wpm+' WPM';
+      right.appendChild(b);right.appendChild(document.createTextNode(' · '+acc+'% accuracy'));
+      li.appendChild(left);li.appendChild(right);ul.appendChild(li);
+    });
+    $('histEmpty').textContent=signed?'Your saved runs appear here, on any device you sign in on.':'Your finished runs appear here. They are saved in this browser only. Sign in on the home screen to keep them on your account.';
+    $('histEmpty').hidden=hist.length>0;
+    var parts=Object.keys(best).map(function(m){return (MODE_LABEL[m]||m)+': '+best[m]+' WPM'});
+    $('bests').textContent=parts.length?'Personal bests: '+parts.join('  ·  '):'';
+    $('clear').hidden=signed||!hist.length;
+  }
+  $('clear').onclick=function(){save_('typearena-solo-history',[]);save_('typearena-solo-best',{});renderHistory()};
+
+  function finish(){
+    done=true;tEnd=performance.now();clearInterval(timer);ta.disabled=true;
+    box.classList.add('done');render();stats();
+    var a=analyse();
+    $('rWpm').textContent=a.wpm;$('rRaw').textContent=a.raw;$('rAcc').textContent=a.acc+'%';
+    $('rCons').textContent=a.cons==null?'-':a.cons+'%';$('rTime').textContent=(a.ms/1000).toFixed(1)+'s';$('rErr').textContent=errors;
+    $('rLevel').textContent=levelOf(a.wpm);
+    var signed=!!(acct&&acct.user),best=load_('typearena-solo-best',{}),prev=signed?(acct.bests[mode]||0):(best[mode]||0),msg;
+    if(a.wpm>prev){msg=prev?'New personal best for '+MODE_LABEL[mode]+'. The previous one was '+prev+' WPM.':'First run saved as your personal best for '+MODE_LABEL[mode]+'.';if(!signed){best[mode]=a.wpm;save_('typearena-solo-best',best)}}
+    else msg='Personal best for '+MODE_LABEL[mode]+': '+prev+' WPM.';
+    $('rBest').textContent=msg;$('rSaved').textContent='';
+    if(signed)saveToAccount(a);else saveLocal(a);
+    drawChart(a);
+    var wb=$('rWords');wb.textContent='';
+    if(a.practice.length)a.practice.forEach(function(w){var c=document.createElement('span');c.className='chip';c.textContent=w;wb.appendChild(c)});
+    else{var n=document.createElement('p');n.className='muted';n.textContent='A clean run, no mistakes. Try a longer text or push your speed.';wb.appendChild(n)}
+    $('result').hidden=false;renderHistory();
+    if($('result').scrollIntoView)$('result').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+
+  // ---- account: signed-in runs are saved on the server, so they follow you to any device ----
+  var acct=null;
+  function getSession(){try{return localStorage.getItem('ta-session')||''}catch(e){return ''}}
+  function api(method,path,body){
+    var h={'content-type':'application/json'},t=getSession();if(t)h.authorization='Bearer '+t;
+    return fetch(path,{method:method,headers:h,body:body?JSON.stringify(body):undefined}).then(function(r){
+      return r.json().catch(function(){return {}}).then(function(j){return {status:r.status,json:j}});
+    });
+  }
+  function saveLocal(a){
+    var hist=load_('typearena-solo-history',[]);hist.unshift({t:Date.now(),mode:mode,wpm:a.wpm,acc:a.acc});save_('typearena-solo-history',hist.slice(0,8));
+  }
+  function refreshAccount(){
+    return api('GET','/api/solo').then(function(r){if(r.status===200&&acct){acct.bests=r.json.bests;acct.recent=r.json.recent}}).catch(function(){});
+  }
+  function saveToAccount(a){
+    var run={mode:mode,wpm:a.wpm,raw:a.raw,accuracy:a.acc,consistency:a.cons,durationMs:Math.round(a.ms),errors:errors};
+    function failed(why){$('rSaved').textContent='Could not save this run to your account ('+why+'). It is kept in this browser.';saveLocal(a)}
+    return api('POST','/api/solo',run).then(function(r){
+      if(r.status===201)return refreshAccount().then(function(){$('rSaved').textContent='Saved to your account.';renderHistory()});
+      failed((r.json&&r.json.error)||'try again later');
+    }).catch(function(){failed('no connection')});
+  }
+  function setNote(){
+    var n=$('acctNote');n.textContent='';$('profileLink').hidden=!(acct&&acct.user);
+    if(acct&&acct.user){n.textContent='Signed in as '+acct.user.username+'. Your runs are saved to your account.';return}
+    n.appendChild(document.createTextNode('Not signed in: runs are saved in this browser only. '));
+    var a=document.createElement('a');a.href='/';a.textContent='Sign in';a.style.color='var(--accent)';n.appendChild(a);
+    n.appendChild(document.createTextNode(' to keep them on your account and see them on any device.'));
+  }
+  function initAccount(){
+    if(!getSession()){setNote();return}
+    api('GET','/api/me').then(function(r){
+      if(r.status!==200){if(r.status===401){try{localStorage.removeItem('ta-session')}catch(e){}}setNote();return}
+      acct={user:r.json.user,bests:{},recent:[]};
+      return refreshAccount().then(function(){setNote();renderHistory()});
+    }).catch(function(){setNote()});
+  }
+
+  // ---- controls ----
+  document.querySelectorAll('.modes button').forEach(function(b){
+    b.onclick=function(){
+      mode=b.getAttribute('data-mode');
+      document.querySelectorAll('.modes button').forEach(function(x){var on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on?'true':'false')});
+      load(makeText());
+    };
+  });
+  $('retry').onclick=reset;$('again').onclick=reset;
+  $('next').onclick=function(){load(makeText())};$('another').onclick=function(){load(makeText())};
+  box.addEventListener('click',function(){if(!done)ta.focus()});
+  setNote();renderHistory();load(makeText());initAccount();
+})();
+</script>
+</body>
+</html>

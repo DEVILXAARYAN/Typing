@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Profile · TypeArena</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#F3F5FF;--panel:#FFFFFF;--line:#D5DBF5;--text:#12163A;--mute:#5A6396;
+  --ok:#17803D;--accent:#5B3FE0;--bad:#C62828;--chip:#E8EBFF;--brand:#C6FF3D;
+  color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0B0F1E;--panel:#141A33;--line:#2A3366;--text:#E8ECFF;--mute:#9AA3C7;--ok:#C6FF3D;--accent:#7C5CFF;--bad:#FF8A8A;--chip:#1D2447;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#0B0F1E;--panel:#141A33;--line:#2A3366;--text:#E8ECFF;--mute:#9AA3C7;--ok:#C6FF3D;--accent:#7C5CFF;--bad:#FF8A8A;--chip:#1D2447;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh}
+[hidden]{display:none!important}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 48px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:700;letter-spacing:-.5px;color:var(--text);text-decoration:none}
+.logo i{width:36px;height:36px;border-radius:10px;background:var(--brand);color:#0B0F1E;display:flex;align-items:center;justify-content:center;font:700 18px 'JetBrains Mono',monospace;font-style:normal}
+.right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+a.btn{font:500 15px 'Space Grotesk',system-ui,sans-serif;min-height:44px;padding:0 20px;border-radius:12px;border:1px solid var(--line);background:var(--chip);color:var(--text);display:inline-flex;align-items:center;text-decoration:none}
+a.btn.primary{background:var(--brand);border-color:var(--brand);color:#0B0F1E;font-weight:700}
+a.btn:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:26px 28px;display:flex;flex-direction:column;gap:16px}
+.card h1,.card h2{margin:0;letter-spacing:-.5px}.card h1{font-size:34px}.card h2{font-size:24px}
+.muted{color:var(--mute);margin:0;font-size:15px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.stat{background:var(--chip);border-radius:18px;padding:14px 16px}
+.stat small{display:block;font-size:14px;color:var(--mute)}
+.stat b{display:block;font:700 28px 'JetBrains Mono',ui-monospace,monospace;margin-top:4px}
+.stat.main b{color:var(--ok);font-size:34px}
+.stat span{font-size:13px;color:var(--mute)}
+svg.chart{width:100%;height:auto;display:block}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th{font-weight:500;color:var(--mute);text-align:left;padding:8px 10px;font-size:14px}
+td{padding:12px 10px;border-top:1px solid var(--line)}
+td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace}
+.pos{color:var(--ok);font-weight:700}.neg{color:var(--bad);font-weight:700}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-size:15px}
+.chip b{font-family:'JetBrains Mono',ui-monospace,monospace}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <a class="logo" href="/"><i>T</i>TypeArena</a>
+    <div class="right"><a class="btn" href="/locker">Locker</a><a class="btn" href="/solo">Solo Sprint</a><a class="btn primary" href="/">Play</a></div>
+  </header>
+
+  <section class="card" id="message"><p class="muted" id="msg">Loading…</p><div><a class="btn" id="msgLink" href="/" hidden>Back to the home screen</a></div></section>
+
+  <div id="content" hidden style="display:flex;flex-direction:column;gap:20px">
+    <section class="card">
+      <div><h1 id="pName"></h1><p class="muted" id="pSince"></p></div>
+      <div class="stats">
+        <div class="stat main"><small>Rating</small><b id="sRating">-</b></div>
+        <div class="stat"><small>Rank</small><b id="sRank">-</b><span id="sRankNote"></span></div>
+        <div class="stat"><small>Rated games</small><b id="sGames">0</b></div>
+        <div class="stat"><small>Wins</small><b id="sWins">0</b><span id="sWinRate"></span></div>
+        <div class="stat"><small>Best match WPM</small><b id="sBest">0</b></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Rating history</h2>
+      <svg class="chart" id="ratingChart" viewBox="0 0 600 200" role="img" aria-label="Rating after each rated match" hidden></svg>
+      <p class="muted" id="ratingEmpty">No rated matches yet. Play Quick match while signed in with at least one other signed-in player to earn a rating.</p>
+    </section>
+
+    <section class="card">
+      <h2>Rated matches</h2>
+      <div class="table-scroll" id="matchWrap"><table>
+        <thead><tr><th>Date</th><th>Result</th><th class="num">WPM</th><th class="num">Accuracy</th><th class="num">Rating</th></tr></thead>
+        <tbody id="matchBody"></tbody>
+      </table></div>
+      <p class="muted" id="matchEmpty">Rated matches will be listed here.</p>
+    </section>
+
+    <section class="card" id="soloCard" hidden>
+      <h2>Solo Sprint</h2>
+      <p class="muted">Runs saved to your account. They are practice results reported by your browser, so they never change your rating or the leaderboard. Only you can see them.</p>
+      <div class="chips" id="soloChips"></div>
+      <svg class="chart" id="soloChart" viewBox="0 0 600 200" role="img" aria-label="Speed of your last solo runs" hidden></svg>
+      <div class="table-scroll" id="soloWrap"><table>
+        <thead><tr><th>Date</th><th>Text</th><th class="num">WPM</th><th class="num">Accuracy</th><th class="num">Consistency</th></tr></thead>
+        <tbody id="soloBody"></tbody>
+      </table></div>
+      <p class="muted" id="soloEmpty">No saved runs yet. Open Solo Sprint while signed in and finish a run.</p>
+      <div><a class="btn primary" href="/solo">Start a Solo Sprint run</a></div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function(){
+  var MODE={passage:'Passage','10':'10 words','25':'25 words','50':'50 words'};
+  var $=function(id){return document.getElementById(id)};
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+  function getSession(){try{return localStorage.getItem('ta-session')||''}catch(e){return ''}}
+  function api(path){
+    var h={},t=getSession();if(t)h.authorization='Bearer '+t;
+    return fetch(path,{headers:h}).then(function(r){return r.json().catch(function(){return {}}).then(function(j){return {status:r.status,json:j}})});
+  }
+  function say(text,link){$('msg').textContent=text;$('msgLink').hidden=!link;$('message').hidden=false;$('content').hidden=true}
+  function date(t){return new Date(t).toLocaleDateString()}
+
+  // A simple line chart. points: array of numbers, oldest first.
+  function chart(svg,points,label,unit){
+    var NS='http://www.w3.org/2000/svg';svg.textContent='';
+    var L=48,R=12,T=12,B=26,W=600,H=200,pw=W-L-R,ph=H-T-B;
+    var lo=Math.min.apply(null,points),hi=Math.max.apply(null,points),pad=Math.max(5,(hi-lo)*0.2);
+    lo=Math.max(0,Math.floor((lo-pad)/5)*5);hi=Math.ceil((hi+pad)/5)*5;if(hi<=lo)hi=lo+10;
+    function X(i){return L+(points.length<=1?pw/2:i*pw/(points.length-1))}
+    function Y(v){return T+ph-((v-lo)/(hi-lo))*ph}
+    function add(n,at,txt){var e=document.createElementNS(NS,n);for(var k in at)e.setAttribute(k,at[k]);if(txt!=null)e.textContent=txt;svg.appendChild(e);return e}
+    [0,.5,1].forEach(function(f){
+      var v=lo+(hi-lo)*f,y=Y(v);
+      add('line',{x1:L,x2:W-R,y1:y,y2:y,style:'stroke:var(--line)','stroke-width':1});
+      add('text',{x:L-8,y:y+4,'text-anchor':'end','font-size':12,style:'fill:var(--mute)'},String(Math.round(v)));
+    });
+    add('text',{x:L,y:H-6,'font-size':12,style:'fill:var(--mute)'},unit.first);
+    add('text',{x:W-R,y:H-6,'text-anchor':'end','font-size':12,style:'fill:var(--mute)'},unit.last);
+    add('polyline',{points:points.map(function(v,i){return X(i).toFixed(1)+','+Y(v).toFixed(1)}).join(' '),fill:'none',style:'stroke:var(--accent)','stroke-width':3,'stroke-linejoin':'round','stroke-linecap':'round'});
+    points.forEach(function(v,i){add('circle',{cx:X(i),cy:Y(v),r:3.5,style:'fill:var(--accent)'})});
+    svg.setAttribute('aria-label',label);svg.hidden=false;
+  }
+
+  function showProfile(data,own){
+    $('message').hidden=true;$('content').hidden=false;
+    var u=data.user;
+    $('pName').textContent=own?u.username+' (you)':u.username;
+    $('pSince').textContent='Member since '+date(u.createdAt);
+    document.title=u.username+' · TypeArena';
+    $('sRating').textContent=u.rating;
+    $('sRank').textContent=data.rank?'#'+data.rank:'-';
+    $('sRankNote').textContent=data.rank?'on the leaderboard':'play a rated match';
+    $('sGames').textContent=u.games;$('sWins').textContent=u.wins;
+    $('sWinRate').textContent=u.games?Math.round(u.wins/u.games*100)+'% of games':'';
+    $('sBest').textContent=u.bestWpm?Math.round(u.bestWpm):'-';
+
+    var ms=data.matches||[];                          // newest first
+    $('matchEmpty').hidden=ms.length>0;$('matchWrap').hidden=ms.length===0;
+    var body=$('matchBody');body.textContent='';
+    ms.forEach(function(m){
+      var tr=document.createElement('tr'),d=m.ratingAfter-m.ratingBefore;
+      tr.appendChild(el('td','',date(m.finishedAt)));
+      tr.appendChild(el('td','','#'+m.rank+' of '+m.players));
+      tr.appendChild(el('td','num',String(Math.round(m.wpm))));
+      tr.appendChild(el('td','num',Math.round(m.accuracy*10)/10+'%'));
+      var rt=el('td','num',m.ratingAfter+' ');rt.appendChild(el('span',d>0?'pos':d<0?'neg':'',(d>0?'+':'')+d));
+      tr.appendChild(rt);body.appendChild(tr);
+    });
+    if(ms.length){
+      var asc=ms.slice().reverse(),pts=[asc[0].ratingBefore].concat(asc.map(function(m){return m.ratingAfter}));
+      $('ratingEmpty').hidden=true;
+      chart($('ratingChart'),pts,'Rating after each of the last '+asc.length+' rated matches, from '+pts[0]+' to '+pts[pts.length-1],{first:'start',last:'now'});
+    }else{$('ratingEmpty').hidden=false;$('ratingChart').hidden=true}
+
+    $('soloCard').hidden=!own;
+    if(own&&data.solo)showSolo(data.solo);
+  }
+
+  function showSolo(s){
+    var chips=$('soloChips');chips.textContent='';
+    function chip(label,value){var c=el('span','chip',label+' ');c.appendChild(el('b','',value));chips.appendChild(c)}
+    chip('Runs saved',String(s.runs));
+    if(s.avgLast10!=null)chip('Average of last 10',s.avgLast10+' WPM');
+    Object.keys(s.bests).forEach(function(m){chip('Best '+(MODE[m]||m),s.bests[m]+' WPM')});
+    var rs=s.recent||[];
+    $('soloEmpty').hidden=rs.length>0;$('soloWrap').hidden=rs.length===0;
+    var body=$('soloBody');body.textContent='';
+    rs.slice(0,10).forEach(function(r){
+      var tr=document.createElement('tr');
+      tr.appendChild(el('td','',date(r.at)));tr.appendChild(el('td','',MODE[r.mode]||r.mode));
+      tr.appendChild(el('td','num',String(r.wpm)));tr.appendChild(el('td','num',r.accuracy+'%'));
+      tr.appendChild(el('td','num',r.consistency==null?'-':r.consistency+'%'));
+      body.appendChild(tr);
+    });
+    if(rs.length>=2){
+      var pts=rs.slice().reverse().map(function(r){return r.wpm});
+      chart($('soloChart'),pts,'Speed of the last '+pts.length+' solo runs, oldest to newest',{first:'oldest',last:'latest'});
+    }else $('soloChart').hidden=true;
+  }
+
+  var m=location.pathname.match(/^\/u\/([^\/]+)\/?$/);
+  if(m){
+    var name=decodeURIComponent(m[1]);
+    api('/api/users/'+encodeURIComponent(name)).then(function(r){
+      if(r.status===200)showProfile(r.json,false);
+      else say(r.status===404?'Player not found.':'Could not load this profile. Try again in a moment.',true);
+    }).catch(function(){say('Could not reach the server. Try again in a moment.',true)});
+  }else if(!getSession()){
+    say('Sign in on the home screen to see your profile, rated match history and saved Solo Sprint runs.',true);
+  }else{
+    api('/api/profile').then(function(r){
+      if(r.status===200)showProfile(r.json,true);
+      else if(r.status===401){try{localStorage.removeItem('ta-session')}catch(e){}say('Your sign-in has expired. Sign in again on the home screen.',true)}
+      else say('Could not load your profile. Try again in a moment.',true);
+    }).catch(function(){say('Could not reach the server. Try again in a moment.',true)});
+  }
+})();
+</script>
+</body>
+</html>

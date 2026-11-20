@@ -1,0 +1,39 @@
+{
+  "name": "typearena-room-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeArena realtime room server (Node.js, TypeScript, Socket.IO)",
+  "scripts": {
+    "setup": "npm install",
+    "predev": "node scripts/check.mjs",
+    "dev": "tsx watch src/server.ts",
+    "predev:solo": "node scripts/check.mjs",
+    "dev:solo": "cross-env MIN_PLAYERS=1 tsx watch src/server.ts",
+    "prestart": "node scripts/check.mjs",
+    "start": "tsx src/server.ts",
+    "pretest": "node scripts/check.mjs",
+    "test": "tsx test/smoke.ts && tsx test/matchmaking.ts && tsx test/reconnect.ts && tsx test/accounts.ts && tsx test/bots.ts && tsx test/profile.ts && tsx test/cosmetics.ts && tsx test/scene.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "pg": "^8.23.1",
+    "socket.io": "^4.8.0",
+    "tsx": "^4.19.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "@types/pg": "^8.23.1",
+    "cross-env": "^7.0.3",
+    "socket.io-client": "^4.8.0",
+    "typescript": "^5.6.0"
+  },
+  "optionalDependencies": {
+    "@napi-rs/canvas": "^1.1.1"
+  }
+}
